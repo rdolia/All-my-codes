@@ -84,3 +84,13 @@ summary(model_5)
 model_6<-lm(formula = price ~area+bathrooms+stories+mainroad+guestroom+hotwaterheating+airconditioning+furnishingstatusunfurnished+parking+prefarea,data = train)
 summary(model_6)
 #repeat it till you have only 3 stars in the model.
+
+#theb predit the house prices in the test dataset
+predict_1<-predict(model_8,test[,-1])
+test$test_price<-predict_1
+
+#accuracy of prediction
+r<-cor(test$price,test$testprice)
+
+rsquared<-cor(test$price,test$test_price)^2
+
