@@ -1,0 +1,1163 @@
+
+#Perform the below operations:
+#  a. Pre-process the passenger names to come up with a list of
+#titles that represent families and represent using appropriate
+#visualization graph.
+
+#Importing the titanic dataset into R
+library(xlsx)
+titanicdf<-read.xlsx("titanic3.xls",1)
+#Converting the name column to char
+titanicdf$name<-as.character(titanicdf$name)
+
+#Extracting the family name (first name) and adding it to a new column family
+for (i in seq (1:1309)) {
+  titanicdf$family[i]<- strsplit(titanicdf$name, ",")[[i]][1]
+  }
+View(titanicdf$family)
+
+#Count the frequency of common names in family column.
+ library(plyr)
+family_frequency<- count(titanicdf,"family")
+barplot(family_frequency$freq)
+
+#b. Represent the proportion of people survived by family size
+#using a graph.
+library(sqldf)
+
+survived<- sqldf("SELECT * 
+      FROM titanicdf 
+      WHERE survived = '1'") 
+survived_family_freq <- count(survived$family)
+barplot(survived_family_freq$freq)
+
+#c. Impute the missing values in Age variable using Mice library,
+#create two different graphs showing Age distribution before
+#and after imputation
+library(mice)
+
+#Removing columns 1,3,8,9,10,12,13,14,15
+
+mini_titanic <- titanicdf[-c(1,3,8,9,10,12,13,14,15)]
+
+md.pattern(mini_titanic)
+
+library(dplyr) 
+mini_titanic <- mini_titanic %>%
+  mutate(
+    survived = as.factor(survived),
+    sex = as.factor(sex),
+    age = as.numeric(age),
+    sibsp = as.factor(sibsp),
+    parch = as.factor(parch),
+    embarked = as.factor(embarked)
+  )
+str(mini_titanic)
+
+
+#running the mice function
+temp_mini_titanic <- mice(mini_titanic,m=5,maxit=50,seed=500)
+summary(temp_mini_titanic)
+
+#check for imputed data in a field
+temp_mini_titanic$imp$age
+
+#Now we can get back the completed dataset using the complete() function.
+completed_mini_titanic <- complete(temp_mini_titanic,1)
+md.pattern(completed_mini_titanic)
+
+#Inspecting the distribution of original and imputed data
+#before imputation - Age 
+
+#The density of the imputed data for each imputed dataset 
+#is showed in magenta while the density of the observed data is showed in blue
+#after imputation of age
+densityplot(temp_mini_titanic)
+#before imputation of age
+densityplot(mini_titanic$age)
+
+
+#Importing marketing dataset.
+bank_data<- read.csv("bank-full.csv",1,sep = ';')
+bank_data<-as.data.frame(bank_data)
+
+#Perform the below operations:
+# a. Create a visual for representing missing values in the dataset.
+options(max.print=999999)
+library(naniar)
+na_strings <- ("unknown")
+na_strings <-as.character(na_strings)
+#creating new set with missing value unknown changed to NA.
+bank_data1<- bank_data %>% replace_with_na_all(condition = ~.x %in% na_strings)
+
+#visualising missing values
+vis_miss(bank_data1)
+
+#remove/impute missing values
+#As per the above visualisation poutcome variable has 81 % of data missing
+#hence removing that variable.
+bank_data2 <-bank_data1[-16]
+
+#replace NA in contact column by 0
+
+bank_data2[["contact"]][is.na(bank_data2[["contact"]])] <- 0
+
+#job and eduducation are the only columns now with missing data.
+vis_miss(bank_data2)
+#imputing data with mice package.
+library(mice)
+md.pattern(bank_data2)
+
+head(bank_data2)
+library(dplyr) 
+bank_data2 <- bank_data2 %>%
+  mutate(
+    job = as.factor(job),
+    education = as.factor(education),
+    marital = as.factor(marital),
+    default = as.factor(default),
+    housing = as.factor(housing),
+    loan = as.factor(loan),
+    contact = as.factor(contact)
+    )
+str(bank_data2)
+#running the mice function
+bank_data3 <- mice(bank_data2,m=2,maxit=10,seed=500)
+
+
+
+
+
+#b. Show a distribution of clients based on a job.
+hist(bank_data1$job)
+#c. Check whether is there any relation between Job and Marital
+#Status?
+View(cor(bank_data1))
+
+
+#Assignment12.1
+my_data <- read.delim("community.txt",sep = ",")
+columnname <-read.delim("attributes.txt",sep = "@" )
+#Find top attributes having highest correlation (select only Numeric)
+options(max.print = 99999)
+nums <- unlist(lapply(my_data, is.numeric))  
+numeric_attributes<- my_data[,nums]
+correlation <-as.data.frame(cor(numeric_attributes))
+
+#replacing all values of 1 with 0.
+correlation[correlation==1]<-0
+
+#Assignment12.1
+my_data <- read.delim("community.txt",sep = ",")
+columnname <-read.delim("attributes.txt",sep = "@" )
+#Find top attributes having highest correlation (select only Numeric)
+options(max.print = 99999)
+nums <- unlist(lapply(my_data, is.numeric))  
+numeric_attributes<- my_data[,nums]
+correlation <-as.data.frame(cor(numeric_attributes))
+
+#replacing all values of 1 with 0.
+correlation[correlation==1]<-0
+correlation1<-as.matrix(correlation)
+## function to return n largest values and position for matrix 
+nlargest <- function(correlation1, n, sim = TRUE) {
+  mult <- 1;
+  if (sim) mult <- 2;
+  res <- order(correlation1)[seq_len(n) * mult];
+  pos <- arrayInd(res, dim(correlation1), useNames = TRUE);
+  list(values = correlation1[res],
+       position = pos)
+}
+
+nlargest(correlation1, 5);
+#indices for 5 largest correlations are 
+
+#$position
+#row col
+#[1,]  62  63
+#[2,]  16  19
+#[3,]   8  62
+#[4,]  62  93
+#[5,]  46  52
+
+#Values for the above 5 correlations are as below :
+correlation1[62,63]
+correlation1[16,19]
+correlation1[8,62]
+correlation1[62,93]
+correlation1[46,52]
+
+
+
+
+library("rjson")
+
+getwd()
+#json file assignment.json is saved in working directory "C:/Users/ra306656/Documents"
+
+result <- fromJSON(file = "assignment.json")
+result
+js <- as.data.frame(result)
+View(js)
+
+#creating matrix with zeros 10 by 10
+
+matrix1 <- matrix(0,10,10)
+ctr<-0
+for(i in 1:10){
+  for (j in 1:10){
+    if (i==j){
+      print(i)
+      print(j)
+      break }
+    matrix1[i,j]<-1
+    ctr<-ctr+1
+      }
+}
+ctr  
+matrix1
+
+#non vectorised solution and its system time.
+
+m<- (replicate(10,rnorm(10)))
+dframe1 <-as.data.frame(m)
+system.time(
+for(i in 1:10){
+  for (j in 1:10){
+    if(j>10){break}
+  dframe1[i,j]<- dframe1[i,j] + sin(30*(pi/180))  
+  }
+  if(i>10){break}
+}
+)
+
+#VECTORISED FORM OF THE SOLUTION WITH ITS SYSTEM TIME
+vm<-(replicate(10,rnorm(10)))
+vdframe1<-as.data.frame(vm)
+system.time(
+vdframe1<-vdframe1 + sin(30*(pi/180))
+)
+
+#vectorised form of the solution is faster and the differences in loop execution
+#will be higher when n increases. 
+#defining mymat
+m<- replicate(4,seq(1:5))
+mymat<-as.data.frame(m)
+mymat
+#sum of rows
+rowSums(mymat)
+#sum of columns
+colSums(mymat)
+
+#user defined function
+summaryfunction<-function(x){
+  summary(x)
+}
+apply(mtcars, 2,summaryfunction)
+
+#extracting names of the mtcars dataset.
+colnames(mtcars)
+rownames(mtcars)
+
+df1 = data.frame(CustId = c(1:6), Product = c(rep("TV", 3), rep("Radio", 3)))
+df2 = data.frame(CustId = c(2, 4, 6), State = c(rep("Texas", 2), rep("NYC", 1)))
+
+df1 #left table
+df2 #right table
+
+#a   Return only the rows in which the left table have match.
+# inner join
+dfinner <- merge(x=df1,y=df2)
+dfinner
+#b   Returns all rows from both tables, join records from the left which have matching keys
+#in the right table.outer or full join.
+
+dfouter<-merge(x=df1,y=df2,by="CustId",all = TRUE)
+dfouter
+#c  Return all rows from the left table, and any rows with matching keys from the right
+#table. LEFT JOIN.
+
+dfleft<-merge(x=df1,y=df2,by="CustId",all.x = TRUE)
+dfleft
+#Return all rows from the right table, and any rows with matching keys from the left
+#table.RIGHT JOIN
+dfright<-merge(x=df1,y=df2,by="CustId",all.y = TRUE)
+dfright
+
+# . Return a long format of the datasets without matching key.
+library(tidyr)
+gather(df1)
+gather(df2)
+#Assignment 4.2
+#1
+x <- c('data.science.in.R','machine.learning.in.R')
+#Perform the below string operation:
+#  . Replace the period character "." within each string with another character
+#i.e. "-" minus sign.
+x1 <- gsub("[.]", "-", x)
+x1
+
+#2
+
+x <- c('data.science.in.R','machine.learning.in.R')
+x
+#Perform the below String operation:
+#  . Append again with "-" minus sign character at the start of each string and
+#finally concatenate all the string within the vector to form a final single
+#string and assigning it to some object
+
+#adding "-" in front of each string in x
+x3<- sub("", "-", x)
+x3
+#concatenating the 2 strings of x3 and assigning it to x4
+x4 <- paste(x3[1], x3[2], sep ='')
+x4
+states=rownames(USArrests)
+#. Get states names with 'w'
+#convert to lower case
+lowerstates <- tolower(states)
+lowerstates
+
+lsdframe<-as.data.frame(lowerstates)
+
+library(sqldf)
+
+sqldf("SELECT * 
+      FROM lsdframe 
+      WHERE `lowerstates`LIKE 'w%'") 
+
+#. Get states names with 'W'.
+dfstates<- as.data.frame(states)
+dfstates                        
+sqldf("SELECT * 
+      FROM dfstates 
+      WHERE `states`LIKE 'W%'") 
+
+#2. Prepare a histogram of the number of characters in each US state.s
+
+library(ggplot2)
+
+states1 <-  as.data.frame(nchar(states))
+#add a column of names to states1 dataframe
+states1$States<- states
+colnames(states1)<-c("Characters","States")
+states1
+ggplot(states1, aes(x=Characters)) + geom_histogram()
+     #Pulling the names of the states from USArrests into states
+states=rownames(USArrests)
+
+#Converting states 
+data <- data.frame(number=1:50, string = states)
+
+#loading library stringr
+library(stringr)
+#using the str_count function to count the vowels in each state
+data$Count_of_Vowels <- str_count(data$string, "a|e|i|o|u")
+
+#renaming column names as below
+colnames(data) <- c("Number","US States","Vowel Count")
+
+vec1 = c(rownames(mtcars[1:15,]))
+vec2 = c(rownames(mtcars[10:32,]))
+#. obtain the elements of the union between two character
+#vectors.
+unionvec<- union(vec1,vec2)
+unionvec
+#Get those elements that are common to both vectors
+vec1 = c(rownames(mtcars[1:15,]))
+vec2 = c(rownames(mtcars[10:32,]))
+intersectvec<- intersect(vec1,vec2)
+intersectvec
+#Get the difference of the elements between two
+#character vectors.
+vec1 = c(rownames(mtcars[1:15,]))
+vec2 = c(rownames(mtcars[10:32,]))
+# below returns elements in vec1 not in vec2
+setdiff(vec1,vec2)
+#below returns elements in vec2 not in vec1
+setdiff(vec2,vec1)
+
+#4 Test the equality of two character vectors
+vec1 = c(rownames(mtcars[1:15,]))
+vec2 = c(rownames(mtcars[11:25,]))
+#To test if two vectors contain the same elements regardless of order
+setequal(vec1,vec2)
+#setequal out is false which means vec1 and vec2 are not equal. 
+#Problem Statement
+#1. Test whether two vectors are exactly equal (element by
+#                                               element)
+vec1 = c(rownames(mtcars[1:15,]))
+vec2 = c(rownames(mtcars[11:25,]))
+
+vec1 ==vec2
+#Element by element is not equal for vec1 and vec2 hence all returned FALSE.
+
+#2. Sort the character vector in ascending order and descending
+#order
+vec1 = c(rownames(mtcars[1:15,]))
+vec2 = c(rownames(mtcars[11:25,]))
+
+sort(vec1,decreasing = FALSE)
+sort(vec1,decreasing = TRUE)
+
+sort(vec2,decreasing = FALSE)
+sort(vec2,decreasing = TRUE)
+
+#3.What is the major difference between str c() and paste()
+#show an example.
+
+#Str_c is equivalent to paste(), which means you do have the option to 
+#customize your desired separator. The difference is for str_c() the
+#default is no separator
+#Example below.
+#Default str_c example
+
+vec3<- c("This","to","strc")
+vec4<- c("is","test","paste")
+
+library(stringr)
+str_c(vec3,vec4)
+#We can see in above str_c command in the console that default is with no separator.
+
+str_c(vec3,vec4,sep = ".")
+#Above is the str_c command with separator "."
+
+#paste command example.
+#The below default paste command unlike str_c adds a space separator. 
+paste(vec3,vec4)
+#Below is the paste commmand with separator "."
+paste(vec3,vec4,sep = ".")
+
+#4#Introduce a separator when concatenating the strings
+
+#Elementwise concatenation of string vectors with separator "$"
+paste(vec1,vec2,sep = "$")
+
+
+#Perform the below operations:
+#  a. Pre-process the passenger names to come up with a list of
+#titles that represent families and represent using appropriate
+#visualization graph.
+
+#Importing the titanic dataset into R
+library(xlsx)
+titanicdf<-read.xlsx("titanic3.xls",1)
+#Converting the name column to char
+titanicdf$name<-as.character(titanicdf$name)
+
+#Extracting the family name (first name) and adding it to a new column family
+for (i in seq (1:1309)) {
+  titanicdf$family[i]<- strsplit(titanicdf$name, ",")[[i]][1]
+  }
+View(titanicdf$family)
+
+#Count the frequency of common names in family column.
+ library(plyr)
+family_frequency<- count(titanicdf,"family")
+barplot(family_frequency$freq)
+
+#b. Represent the proportion of people survived by family size
+#using a graph.
+library(sqldf)
+
+survived<- sqldf("SELECT * 
+      FROM titanicdf 
+      WHERE survived = '1'") 
+survived_family_freq <- count(survived$family)
+barplot(survived_family_freq$freq)
+
+#c. Impute the missing values in Age variable using Mice library,
+#create two different graphs showing Age distribution before
+#and after imputation
+library(mice)
+
+#Removing columns 1,3,8,9,10,12,13,14,15
+
+mini_titanic <- titanicdf[-c(1,3,8,9,10,12,13,14,15)]
+
+md.pattern(mini_titanic)
+
+library(dplyr) 
+mini_titanic <- mini_titanic %>%
+  mutate(
+    survived = as.factor(survived),
+    sex = as.factor(sex),
+    age = as.numeric(age),
+    sibsp = as.factor(sibsp),
+    parch = as.factor(parch),
+    embarked = as.factor(embarked)
+  )
+str(mini_titanic)
+
+
+#running the mice function
+temp_mini_titanic <- mice(mini_titanic,m=5,maxit=50,seed=500)
+summary(temp_mini_titanic)
+
+#check for imputed data in a field
+temp_mini_titanic$imp$age
+
+#Now we can get back the completed dataset using the complete() function.
+completed_mini_titanic <- complete(temp_mini_titanic,1)
+md.pattern(completed_mini_titanic)
+
+#Inspecting the distribution of original and imputed data
+#before imputation - Age 
+
+#The density of the imputed data for each imputed dataset 
+#is showed in magenta while the density of the observed data is showed in blue
+#after imputation of age
+densityplot(temp_mini_titanic)
+#before imputation of age
+densityplot(mini_titanic$age)
+
+#Importing the titanic dataset into R
+library(xlsx)
+titanicdf<-read.xlsx("titanic3.xls",1)
+titanic_fare<- titanicdf[c(1,9)]
+library(sqldf)
+titanic_class1 <- sqldf("SELECT * FROM titanic_fare 
+                        WHERE pclass = '1'")
+titanic_class1
+titanic_class2 <- sqldf("SELECT * FROM titanic_fare 
+                        WHERE pclass = '2'")
+titanic_class2
+titanic_class3 <- sqldf("SELECT * FROM titanic_fare 
+                        WHERE pclass = '3'")
+titanic_class3
+
+
+boxplot(titanic_class1$fare,titanic_class2$fare,titanic_class3$fare, xlab = "CLASSES", ylab = "FARES", main = "CLASSWISE FARES")
+
+#. Is there any association with Passenger class and
+#gender?
+#  Note- show a stacked bar chart
+
+titanic_gender_class <- titanicdf[c(1,4)]
+library(sqldf)
+class1_female <- sqldf("SELECT * 
+      FROM titanic_gender_class 
+      WHERE pclass = '1' AND `sex` = 'female'")
+
+class1_male <- sqldf("SELECT * 
+                       FROM titanic_gender_class 
+                       WHERE pclass = '1' AND `sex` = 'male'")
+class2_female <- sqldf("SELECT * 
+      FROM titanic_gender_class 
+                       WHERE pclass = '2' AND `sex` = 'female'")
+class2_male <- sqldf("SELECT * 
+      FROM titanic_gender_class 
+                       WHERE pclass = '2' AND `sex` = 'male'")
+class3_male <- sqldf("SELECT * 
+      FROM titanic_gender_class 
+                       WHERE pclass = '3' AND `sex` = 'male'")
+class3_female <- sqldf("SELECT * 
+      FROM titanic_gender_class 
+                     WHERE pclass = '3' AND `sex` = 'female'")
+
+#counts of classwise male and female
+class1_fcount <- nrow(class1_female)
+class1_mcount <-nrow(class1_male)
+class2fcount  <-nrow(class2_female)
+class2mcount  <-nrow(class2_male)
+class3fcount  <-nrow(class3_female)
+class3mcount  <-nrow(class3_male)
+
+#rbinding m and f under same class
+class1<- rbind(class1_fcount,class1_mcount)
+class2<- rbind(class2fcount,class2mcount)
+class3<- rbind(class3fcount,class3mcount)
+
+#cbinding the 3 classes
+all_classes<- cbind(class1,class2,class3)
+colnames(all_classes) <- c("Class 1","Class 2","Class 3")
+row.names(all_classes) <- c("Count of Female", "Count of Male")
+barplot(as.matrix(all_classes),xlab = "CLASSES",ylab = "GENDER",
+        main = "Classwise Gender Count",col = c("red","blue"))
+legend("topleft",
+       c("Female","Male"),
+       fill = c("red","blue")
+)
+#1. Histogram for all variables in a dataset mtcars.
+#Write a program to create histograms for all columns
+View(mtcars)
+library(ggplot2)
+library(tidyr)
+
+
+mtcars %>% gather() %>% head()
+#Using this as our data, we can map value as our x variable, 
+#and use facet_wrap to separate by the  key column:
+ggplot(gather(mtcars), aes(value)) + 
+  geom_histogram(bins = 10) + 
+  facet_wrap(~key, scales = 'free_x')
+
+
+#Write a program to create boxplot for all variables.
+ggplot(gather(mtcars), aes(x=value,y=key)) + 
+  geom_boxplot(bins = 10) + facet_wrap(~key, scales = 'free_x')
+
+  View(mtcars)
+  mtcars_cat <- mtcars[c(2,8,9,10,11)]
+  library(tidyr)
+  gather(mtcars_cat)
+  library(ggplot2)
+  #Write a program to create barplots for all the categorical
+  #columns in mtcars.
+  
+  ggplot(gather(mtcars_cat), aes(value)) + geom_bar()+facet_wrap(~key, scales = 'free_x')
+  
+  #. Create a scatterplot matrix by gear types in mtcars dataset.
+  View(mtcars)
+  pairs(~gear+mpg+cyl+disp+hp,mtcars)
+  pairs(~gear+drat+wt+qsec+vs,mtcars)
+  pairs(~gear+am+carb,mtcars)
+  
+  #. Write a program to create a plot density by class variable.
+  library(ggplot2)
+  library(tidyr)
+  ggplot(gather(mtcars), aes(value)) + geom_density(fill="cyan")+facet_wrap(~key, scales = 'free_x')
+
+
+
+       View(mtcars)
+library(ggplot2)
+library(tidyr)
+gather(mtcars)
+#box and whisker plot by variable
+ggplot(gather(mtcars), aes(x = key,y = value)) + geom_boxplot()+facet_wrap(~key, scales = 'free_x')
+
+
+data(RcmdrTestDrive, package="RcmdrPlugin.IPSUR")
+library(abind, pos=20)
+library(e1071, pos=21)
+
+#a. Calculate the average salary by gender and smoking status.
+numSummary(RcmdrTestDrive[,"salary", drop=FALSE], 
+  groups=RcmdrTestDrive$gender, statistics=c("mean", "sd", "IQR", 
+  "quantiles"), quantiles=c(0,.25,.5,.75,1))
+
+#b. Which gender has the highest mean salary?
+# Male gender has highest mean salary.
+
+#c. Report the highest mean salary.
+# Highest salary is 743.3915
+#. Compare the spreads for the genders by calculating the
+standard deviation of salary by gender.
+# Standard deviation for female salary is 130.7053
+#Standard deviatino for male salary is 158.5423
+#Hence we can see that male salary has a higher standard deviation. 
+#A recent national study showed that approximately 44.7% of college
+#students have used Wikipedia as a source in at least one of their term papers.
+#Let X equal the number of students in a random sample of size n = 31 who have
+#used Wikipedia as a source.
+#Perform the below operations:
+#a. Find the probability that X is equal to 17
+dbinom(17,31,0.447)
+#Probability of X=17 is 0.07532248
+#b. Find the probability that X is at most 13
+pbinom(13,31,0.447)
+#Probability of X is at most 13 is 0.451357
+#c. Find the probability that X is bigger than 11
+pbinom(11,31,0.447,lower.tail = FALSE)
+#Probability of X bigger than 11 is 0.8020339
+#d. Find the probability that X is at least 15.
+pbinom(14,31,0.447,lower.tail = FALSE)
+#Probability of X at least 15 is 0.406024
+#e. Find the probability that X is between 16 and 19, inclusive
+diff(pbinom(c(19,15),31,0.447,lower.tail = FALSE))
+#Probability of X is between 16 and 19, inclusive is  0.2544758 
+
+
+
+#1. If Z is norm (mean = 0, sd = 1)
+#find P(Z > 2.64)
+pnorm(2.64)
+#P(Z > 2.64) = 0.9958547
+#find P(|Z| > 1.39
+2 *pnorm(-abs(2.64))
+
+#Suppose p = the proportion of students who are admitted to the graduate school
+#of the University of California at Berkeley, and suppose that a public relation
+#officer boasts that UCB has historically had a 40% acceptance rate for its graduate
+#school. Consider the data stored in the table UCBAdmissions from 1973. Assuming
+#these observations constituted a simple random sample, are they consistent with the
+#officerâ..s claim, or do they provide evidence that the acceptance
+#rate was significantly less than 40%?
+ # Use an Î± = 0.01 significance level.
+UCBAdmissions
+rejected = 313+ 19 +207+8+205+391+279+244+138+299+351+317
+rejected
+total =  512+89+313+19+353+17+207+8+120+202+205+391+138+131+279+244+53+94+138+299+22+24+351+317
+total
+pbar = 1 - rejected/total  
+pbar
+numerator = (pbar-0.4)
+denominator = sqrt((0.4*0.6)/4526)
+#As significance level is alpha = 0.01 critical value of z is -2.326
+#Calculated value of z  in proportions is z= (pbar-p)/sqrt((p(1-p))/n)
+zcalc = numerator/denominator
+zcalc
+#Hence as zcalc is -1.680919. Hence as value does not lie in the rejection region
+#we accept the null hypothesis and conclude that the officer's claim of 40% acceptance is consistent.
+library(xlsx)
+#a. Read the file in Zip format and get it into R
+zipF<- "C:\\Users\\ra306656\\Documents\\AirQualityUCI.zip"
+outDir<-"D:\\Rachit\\Acadgild\\ASSIGNMENTS\\Assignment10.1"
+unzip(zipF,exdir=outDir)
+#file saved in above outDir location.
+data <- read.xlsx("AirQualityUCI.xlsx",1)
+View(data)
+head(data)
+#b. Create Univariate for all the columns.
+library(tidyr)
+library(lattice)
+#1for column CO.GT.
+histogram(~CO.GT.,data)
+densityplot(~CO.GT.,data)
+qqmath(~CO.GT.,data)
+bwplot(~CO.GT.,data)
+#2for column PT08.S1.CO
+
+histogram(~PT08.S1.CO.,data)
+densityplot(~PT08.S1.CO.,data)
+qqmath(~PT08.S1.CO.,data)
+bwplot(~PT08.S1.CO.,data)
+# 3for column NMHC.GT.  
+histogram(~NMHC.GT.,data)
+densityplot(~NMHC.GT.,data)
+qqmath(~NMHC.GT.,data)
+bwplot(~NMHC.GT.,data)
+# 4 for column NMHC.GT.  
+histogram(~NMHC.GT.,data)
+densityplot(~NMHC.GT.,data)
+qqmath(~NMHC.GT.,data)
+bwplot(~NMHC.GT.,data)
+#5for column C6H6.GT.
+histogram(~C6H6.GT.,data)
+densityplot(~C6H6.GT.,data)
+qqmath(~C6H6.GT.,data)
+bwplot(~C6H6.GT.,data)
+#6for column PT08.S2.NMHC. 
+histogram(~PT08.S2.NMHC. ,data)
+densityplot(~PT08.S2.NMHC. ,data)
+qqmath(~PT08.S2.NMHC. ,data)
+bwplot(~PT08.S2.NMHC. ,data)
+#7for column NOx.GT.  
+histogram(~NOx.GT.,data)
+densityplot(~NOx.GT.,data)
+qqmath(~NOx.GT. ,data)
+bwplot(~NOx.GT. ,data)
+#8for column PT08.S3.NOx.   
+histogram(~PT08.S3.NOx. ,data)
+densityplot(~PT08.S3.NOx. ,data)
+qqmath(~PT08.S3.NOx. ,data)
+bwplot(~PT08.S3.NOx. ,data)
+#9for column NO2.GT.    
+histogram(~NO2.GT. ,data)
+densityplot(~NO2.GT. ,data)
+qqmath(~NO2.GT. ,data)
+bwplot(~NO2.GT. ,data)
+#10for column PT08.S4.NO2.     
+histogram(~PT08.S4.NO2.,data)
+densityplot(~PT08.S4.NO2. ,data)
+qqmath(~PT08.S4.NO2.,data)
+bwplot(~PT08.S4.NO2. ,data)
+#11for column PT08.S5.O3.           
+histogram(~PT08.S5.O3.,data)
+densityplot(~PT08.S5.O3.,data)
+qqmath(~PT08.S5.O3.,data)
+bwplot(~PT08.S5.O3.,data)
+#12for column RH           
+histogram(~RH,data)
+densityplot(~RH,data)
+qqmath(~RH,data)
+bwplot(~RH,data)
+#13for column AH           
+histogram(~AH,data)
+densityplot(~AH,data)
+qqmath(~AH,data)
+bwplot(~AH,data)
+ 
+#c. Check for missing values in all columns.
+
+table(is.na(data$Date))
+table(is.na(data$Time))
+table(is.na(data$CO.GT.))
+table(is.na(data$PT08.S1.CO.))
+table(is.na(data$NMHC.GT.))
+table(is.na(data$C6H6.GT.))
+table(is.na(data$PT08.S2.NMHC.))
+table(is.na(data$NOx.GT.))
+table(is.na(data$PT08.S3.NOx.))
+table(is.na(data$NO2.GT.))
+table(is.na(data$PT08.S4.NO2.))
+table(is.na(data$PT08.S5.O3.))
+table(is.na(data$T))
+table(is.na(data$RH))
+table(is.na(data$AH))
+table(is.na(data$NA.))
+table(is.na(data$NA..1))
+#We can see that there is NA for all variables in rows 9358 till 9471.
+#Hence we will remove them from data.
+data<-data[-c(9358:9471), ]
+#As last 2 column are full NAs we remove them as well.
+data<- data[,-c(16:17)]
+#Run below commands again to see number of NAs.
+table(is.na(data$Date))
+table(is.na(data$Time))
+table(is.na(data$CO.GT.))
+table(is.na(data$PT08.S1.CO.))
+table(is.na(data$NMHC.GT.))
+table(is.na(data$C6H6.GT.))
+table(is.na(data$PT08.S2.NMHC.))
+table(is.na(data$NOx.GT.))
+table(is.na(data$PT08.S3.NOx.))
+table(is.na(data$NO2.GT.))
+table(is.na(data$PT08.S4.NO2.))
+table(is.na(data$PT08.S5.O3.))
+table(is.na(data$T))
+table(is.na(data$RH))
+table(is.na(data$AH))
+#Impute the missing values using appropriate methods
+#There are no missing values anymore hence no imputation is required.
+#Importing marketing dataset.
+bank_data<- read.csv("bank-full.csv",1,sep = ';')
+bank_data<-as.data.frame(bank_data)
+
+#Perform the below operations:
+# a. Create a visual for representing missing values in the dataset.
+options(max.print=999999)
+library(naniar)
+na_strings <- ("unknown")
+na_strings <-as.character(na_strings)
+#creating new set with missing value unknown changed to NA.
+bank_data1<- bank_data %>% replace_with_na_all(condition = ~.x %in% na_strings)
+
+#visualising missing values
+vis_miss(bank_data1)
+
+#remove/impute missing values
+#As per the above visualisation poutcome variable has 81 % of data missing
+#hence removing that variable.
+bank_data2 <-bank_data1[-16]
+
+#replace NA in contact column by 0
+
+bank_data2[["contact"]][is.na(bank_data2[["contact"]])] <- 0
+
+#job and eduducation are the only columns now with missing data.
+#imputing data with mice package.
+library(mice)
+md.pattern(bank_data2)
+
+head(bank_data2)
+library(dplyr) 
+bank_data2 <- bank_data2 %>%
+  mutate(
+    job = as.factor(job),
+    education = as.factor(education),
+    marital = as.factor(marital),
+    default = as.factor(default),
+    housing = as.factor(housing),
+    loan = as.factor(loan),
+    contact = as.factor(contact)
+    )
+str(bank_data2)
+#running the mice function
+bank_data3 <- mice(bank_data2,m=2,maxit=10,seed=500)
+summary(bank_data3)
+#check for imputed data in a field job
+bank_data3$imp$job
+#check for imputed data in a field education
+bank_data3$imp$education
+#Now we can get back the completed dataset using the complete() function.
+bank_data4 <- complete(bank_data3,1)
+md.pattern(bank_data4)
+#We now have the full data without any missing values. 
+
+#b. Show a distribution of clients based on a job.
+hist(bank_data1$job)
+#c. Check whether is there any relation between Job and Marital
+#Status?
+
+#converting below columns to numeric to calculate rank correlation
+bank_data4 <- bank_data4 %>%
+mutate(
+  job = as.numeric(job),
+  education = as.numeric(education),
+  marital = as.numeric(marital)
+
+)
+cor(bank_data4$job,bank_data4$marital, method = 'spearman')
+
+
+#Correlation between job and Marital is 0.056% hence we can say that there
+#is no correlation between them.
+#d. Check whether is there any association between Job and
+#Education?
+cor(bank_data4$job,bank_data4$education, method = 'spearman')
+#19% correlation exists between job and education. Low correlation between the variables
+#Importing marketing dataset.
+bank_data<- read.csv("bank-full.csv",1,sep = ';')
+bank_data<-as.data.frame(bank_data)
+
+#Perform the below operations:
+# a. Create a visual for representing missing values in the dataset.
+options(max.print=999999)
+library(naniar)
+na_strings <- ("unknown")
+na_strings <-as.character(na_strings)
+#creating new set with missing value unknown changed to NA.
+bank_data1<- bank_data %>% replace_with_na_all(condition = ~.x %in% na_strings)
+
+#visualising missing values
+vis_miss(bank_data1)
+
+#remove/impute missing values
+#As per the above visualisation poutcome variable has 81 % of data missing
+#hence removing that variable.
+bank_data2 <-bank_data1[-16]
+
+#replace NA in contact column by 0
+
+bank_data2[["contact"]][is.na(bank_data2[["contact"]])] <- 0
+
+#job and eduducation are the only columns now with missing data.
+#imputing data with mice package.
+library(mice)
+md.pattern(bank_data2)
+
+head(bank_data2)
+library(dplyr) 
+bank_data2 <- bank_data2 %>%
+  mutate(
+    job = as.factor(job),
+    education = as.factor(education),
+    marital = as.factor(marital),
+    default = as.factor(default),
+    housing = as.factor(housing),
+    loan = as.factor(loan),
+    contact = as.factor(contact)
+  )
+str(bank_data2)
+#running the mice function
+bank_data3 <- mice(bank_data2,m=3,maxit=10,seed=500)
+summary(bank_data3)
+#check for imputed data in a field job
+bank_data3$imp$job
+#check for imputed data in a field education
+bank_data3$imp$education
+#Now we can get back the completed dataset using the complete() function.
+bank_data4 <- complete(bank_data3,1)
+md.pattern(bank_data4)
+
+
+#a. Is there any association between job and default?
+#$converting job, default to numeric
+bank_data4 <- bank_data4 %>%
+  mutate(
+    job = as.numeric(job),
+    default = as.numeric(default)
+      )
+
+#Calculating Spearman rho correlation
+corra<- cor.test(bank_data4$job,bank_data4$default,method = 'spearman')
+corra
+#rho calculated between job and default is -0.004 , hence we can conclude
+#that there is very low negative correlation between the two variables.
+#b. Is there any significant difference in duration of last call between?
+#  people having housing loan or not?
+
+#finding average of duration for loan value 1 and 2.
+library(sqldf)
+loan1<- sqldf("SELECT duration 
+      FROM  bank_data4
+              WHERE `loan` = 1")
+#calculate mu1 which is the mean of duration with loan = 1
+x1bar<- mean(loan1$duration)
+x1bar
+ 
+#calculate mu2 which is the mean of duration with loan = 2
+loan2<- sqldf("SELECT duration 
+      FROM  bank_data4
+              WHERE `loan` = 2")
+x2bar<-mean(loan2$duration)
+x2bar
+#calculation standard deviation for both samples loan1 and loan2
+temp1 <- (loan1$duration)
+sd1<- sd(temp1)
+sd1
+temp2 <-loan2$duration
+sd2<-sd(temp2)
+sd2
+#calculate t
+
+numerator = x1bar - x2bar
+
+#denominator
+
+denominator <- sqrt((sd1^2)/37967 + (sd2^2)/7244)
+#hence t is 
+t<-numerator/denominator
+t
+#t value is 2.67.
+#Considering significance of 0.05 we have critical z value as -+1.96.
+#As calculated z value 2.67 is bigger than 1.96 we reject the null hypothesis 
+#and conclude that there is a significant difference in duration of last call
+#between people having housing loan and not.
+
+#d. Is the employment variation rate consistent across Job types?
+bank_data4 <- bank_data4 %>%
+  mutate(
+    job = as.factor(job)
+      )
+
+levels(bank_data4$job)
+ #there are 11 job types. 
+EVRnum <- table(bank_data4$job)
+EVRnum
+#total number of people is 45211 hence EVR is 
+EVR<-EVRnum/45211 *100
+EVR
+#From the above Employment variation rate table  calculated we can see that 
+# the variation rate varies for each job hence we can conclude 
+#that they are not consistent across Job types.
+
+#e. Is the employment variation rate same across Education?
+#creating 3 sets with educations 1 2 and 3.
+education1<- sqldf("SELECT job 
+      FROM  bank_data4
+      WHERE `education` = 1")
+education1
+education2<- sqldf("SELECT job 
+      FROM  bank_data4
+                   WHERE `education` = 2")
+
+education3<- sqldf("SELECT job 
+      FROM  bank_data4
+                   WHERE `education` = 3")
+#displaying proportions of job type in each table and calculating 
+#EVR for each table of education
+EVRnum1 <- table(education1)
+EVRnum1<-EVRnum1/45211*100
+
+
+EVRnum2 <-table(education2)
+EVRnum2<-EVRnum2/45211*100
+
+
+EVRnum3 <- table(education3)
+EVRnum3 <-EVRnum3/45211*100
+
+
+EVRgroup <- cbind(EVRnum1,EVRnum2,EVRnum3)
+EVRgroup
+#Hence we can see that the employment variation rate is not same across Education
+#Assignment12.1
+my_data <- read.delim("community.txt",sep = ",")
+
+#a Find top attributes having highest correlation (select only Numeric)
+options(max.print = 99999)
+nums <- unlist(lapply(my_data, is.numeric))  
+numeric_attributes<- my_data[,nums]
+correlation <-as.data.frame(cor(numeric_attributes))
+
+#replacing all values of 1 with 0.
+correlation[correlation==1]<-0
+correlation1<-as.matrix(correlation)
+## function to return n largest values and position for matrix 
+nlargest <- function(correlation1, n, sim = TRUE) {
+  mult <- 1;
+  if (sim) mult <- 2;
+  res <- order(correlation1)[seq_len(n) * mult];
+  pos <- arrayInd(res, dim(correlation1), useNames = TRUE);
+  list(values = correlation1[res],
+       position = pos)
+}
+
+nlargest(correlation1, 5);
+#indices for 5 largest correlations are 
+
+#$position
+#row col
+#[1,]  62  63
+#[2,]  16  19
+#[3,]   8  62
+#[4,]  62  93
+#[5,]  46  52
+
+#Values for the above 5 correlations are as below :
+correlation1[62,63]
+correlation1[16,19]
+correlation1[8,62]
+correlation1[62,93]
+correlation1[46,52]
+#b Find out top 3 reasons for having  more crime in city
+#The column X0.2.2 is ViolentCrimesPerPop which best identifies having more crime.
+# Hence we will take the 3 highest correlations for this column and identify the 3 reasons.
+violent3<-correlation1[,102]
+violent3<-as.matrix(violent3)
+sort(violent3,decreasing = TRUE)
+#The 3 highest values are 0.73796471  0.63127917  0.57468959 which are for 
+#X.0.14,X.0.02,X.0.15.
+#Highest reason -      - PctRecImmig5- 0.73796471
+#Second highest reason - agePct65up  - 0.63127917
+#Third highest reason  - AsianPerCap - 0.57468959
+
+#Which all attributes have high attribute with crime rate.
+library(sqldf)
+correlation1 <- as.data.frame(correlation1)
+#Choosing correlations that are higher than 0.5
+high_corr <- sqldf("SELECT * 
+      FROM  correlation1
+      WHERE  `X0.2.2` > '0.5'")
+high_corr
+#Choosing correlations that are less than -0.5
+high_corr_neg <- sqldf("SELECT * 
+                   FROM  correlation1
+                   WHERE  `X0.2.2` < '-0.5'")
+high_corr_neg
+#Assignment12.2
+my_data <- read.delim("community.txt",sep = ",")
+
+#a Find top attributes having highest correlation (select only Numeric)
+options(max.print = 99999)
+nums <- unlist(lapply(my_data, is.numeric))  
+numeric_attributes<- my_data[,nums]
+correlation <-as.data.frame(cor(numeric_attributes))
+
+#replacing all values of 1 with 0.
+correlation[correlation==1]<-0
+correlation1<-as.matrix(correlation)
+
+#a. Visualize the correlation between all variable in a meaningful
+#way, clear representation of correlations
+  install.packages("corrplot")
+library(corrplot)
+#Positive correlations are displayed in blue and negative correlations in red color
+corrplot(correlation1, method = "color")
+#. Find out top 3
+#reasons for having more crime in a city.
+
+#The column X0.2.2 is ViolentCrimesPerPop which best identifies having more crime.
+# Hence we will take the 3 highest correlations for this column and identify the 3 reasons.
+violent3<-correlation1[,102]
+violent3<-as.matrix(violent3)
+sort(violent3,decreasing = TRUE)
+#The 3 highest values are 0.73796471  0.63127917  0.57468959 which are for 
+#X.0.14,X.0.02,X.0.15.
+#Highest reason -      - PctRecImmig5- 0.73796471
+#Second highest reason - agePct65up  - 0.63127917
+#Third highest reason  - AsianPerCap - 0.57468959
+#b. What is the difference between covariance and correlation,
+#take an example from this dataset and show the differences if
+#any?
+#Attached pdf explains the detailed difference. 
+#correlation  - refer to above calculated 
+#covariance - as below 
+a<- cov(correlation$X0.19,correlation$X0.34) 
+a
+ 
+
+
