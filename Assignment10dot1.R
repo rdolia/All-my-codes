@@ -119,4 +119,20 @@ table(is.na(data$RH))
 table(is.na(data$AH))
 #Impute the missing values using appropriate methods
 #There are no missing values anymore hence no imputation is required.
+# Create bi-variate analysis for all relationships
+#removing first 2 columns for bi- variate analysis
+data1 <- data[-c(1,2)]
+library(corrplot)
+data2 <- as.matrix(data1)
+corrplot(cor(data2))
+#We can see higher correlations between attributes with darker and bigger circles
 
+#Test relevant hypothesis for valid relation
+colnames(data2)
+
+cor.test(data1$PT08.S1.CO.,data1$PT08.S2.NMHC.)
+#The p-value of the test is  2.2e-16, which is less than the significance level alpha = 0.05.
+#We can conclude that PT08.S1.CO. and PT08.S2.NMHC. are significantly 
+#correlated with a correlation coefficient of0.9331013.
+#doing the same with blue to dark blue circles in the corrplot will determine 
+#significance of correlation for each attribute pair.
