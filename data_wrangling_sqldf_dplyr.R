@@ -50,7 +50,7 @@ path2data
 
 #'Load all variables from the `iris.csv` dataset where `Species = "setosa"`
 #+ message = F, warning = F
-iris_setosa <- read.csv.sql(file.path(path2data) 
+iris_setosa <- read.csv.sql(file.path(path2data)
                             , "SELECT * 
                             FROM file
                             WHERE Species = 'setosa'")
