@@ -14,13 +14,17 @@ cycle(AirPassengers)
 #seasonality
 boxplot(AirPassengers~cycle(AirPassengers))
 #Trend
+#plotting the mean to see if its constant.
 plot(aggregate(AirPassengers, FUN= mean))
 #mean is increasing.
 
 plot(log(AirPassengers))
-#variance has become equal in above plot.
+#variance has become equal in above plot using the log function.
 #now make mean equal.
-plot(diff(log(AirPassengers)))
+ difflog <- (diff(log(AirPassengers)))
+plot(difflog)
+#check again if mean is constant
+plot(aggregate(difflog,FUN=mean))
 #hence mean , variance is constant and no seasonality and trend
 #hence its stationary
 #we can now implement ARMA model
