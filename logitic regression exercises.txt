@@ -1,0 +1,41 @@
+Exercise 1
+Load the MASS package and combine Pima.tr and Pima.tr2 to a data.frame called train and save Pima.te as test. 
+Change the coding of our variable of interest to (type) to 0 (non-diabetic) and 1 (diabetic). Check for and take note of any missing values.
+
+Exercise 2
+Take a look at the data. Plot a scatterplot matrix between all the explanatory variables using pairs(), 
+and color code the dots according to diabetic classification. Furthermore, try to plot type as a function of age. Use jitter 
+to make your graph more informative.
+ Bonus: Can you add a logistic fit based on age on top of your plot?
+
+Exercise 3
+Using the glm() and the train data fit a logistic model of type on age and bmi. Print out the coefficients and their p-value.
+
+Exercise 4
+What does the model fitted in exercise 3 predict in terms of probability for someone age 35 with bmi of 32, what about bmi of 22?
+
+Exercise 5
+According to our model what are the odds that a woman in our sample is diabetic given age 55 and a bmi 37? Remember that odds in this context have a very precise definition which is different from probability.
+
+Learn more about logistic regression Model Evaluation in the online course Regression Machine Learning with R. In this course you will learn how to:
+Avoid model over-fitting using cross-validation for optimal parameter selection
+Explore maximum margin methods such as best penalty of error term support vector machines with linear and non-linear kernels.
+And much more
+Exercise 6
+Build the confusion matrix, a table of actual diabetic classification against model prediction. Use a cutoff value of 0.5, meaning that women who the model estimates to have at least 0.5 chance of being diabetic are predicted to be diabetic. What is the prediction accuracy?
+
+Exercise 7
+Apply the fitted model to the test set. Print the confusion matrix and prediction accuracy.
+
+Exercise 8
+Draw up the ROC curve and calculate the AUC.
+
+Exercise 9
+Add number of pregnancies and age squared as an explanatory variables and redraw the ROC curve on the test set and calculate its AUC.
+
+Exercise 10
+For a woman aged 35 and mother of 2 children, by how much does the probability of diabetes increase, if her bmi was 35 instead of 25 according to the model? What about the marginal effect at bmi = 25?
+
+
+
+http://rstudio-pubs-static.s3.amazonaws.com/341241_933a1bc675974ca3bde3fe45d9d3668d.html
