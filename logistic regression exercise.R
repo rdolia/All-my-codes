@@ -17,10 +17,6 @@ str(test)
 pairs(train, colors = train$type)
 plot(train$age,train$type)
 
-library(ggplot2)
-ggplot(train, aes(x=train$age, y=train$bp, color=train$type)) + geom_point()
-
-
 library(caTools)
 
 #model building glm used for logistic regression
@@ -34,14 +30,23 @@ prob_pred <- predict(classifier,type = 'response',newdata = test[-8])
 #if prob is higher than 0. 5 consider that as diabetic = yes
 y_pred<-ifelse(prob_pred>0.5,1,0)
 
-#What does the model fitted in exercise 3 predict in terms
-#of probability for someone age 35 with bmi of 32, what about bmi of 22?
 
-check<- predict(classifier, type = "response",newdata = data.frame(bmi = c(32, 22), age = 35))
+
 #confusion matrix
 cm<-table(test[,8],y_pred>0.5)
 cm
 
 # Prediction accuracy
 sum(diag(cm)) / sum(cm) 
+
+#What does the model fitted in exercise 3 predict in terms
+#of probability for someone age 35 with bmi of 32, what about bmi of 22?
+
+type<-train$type
+age <-train$age
+bmi <-train$bmi
+classifier1<-glm(formula = type~ age+bmi,family = binomial(),data = train)
+newdata<- data.frame(age=20,bmi = 37)
+
+predict(classifier1, newdata, type = "response")
 
